@@ -1,6 +1,6 @@
 import unittest
 from cli import test_cli
-
+#import NewsApi
 
 class TestNewsApi(unittest.TestCase):
     def setUp(self):
