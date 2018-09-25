@@ -1,14 +1,19 @@
 import unittest
-from cli import test_cli
-#import NewsApi
+from cli import NewsApi
+
 
 class TestNewsApi(unittest.TestCase):
     def setUp(self):
         self.news_api = NewsApi()
+        self.api_key = None
+    
+    def test_api_key_is_available(self):
+        with(self.news_api.get_api_key()):
+            self.assertRaises(ValueError)
 
     def test_api_key_is_successfull(self):
         self.assertEqual(self.news_api.get_api_key(),
-                         a4d893b3113a4d54bd9ce9bb3d5b96c9)
+                         'NEWS_API_KEY')
 
     def test_number_of_headlines_is_equal_to_10(self):
         self.assertEqual(self.news_api.display_result(), 10)
