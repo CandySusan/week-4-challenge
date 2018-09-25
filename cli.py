@@ -1,11 +1,12 @@
 from __future__ import print_function, unicode_literals
 
-from PyInquirer import style_from_dict, Token, prompt, Separator
+import json
+import os
 from pprint import pprint
 
 import requests
+from PyInquirer import Separator, Token, prompt, style_from_dict
 from requests.auth import HTTPDigestAuth
-import json
 
 style = style_from_dict(
     {
@@ -21,68 +22,77 @@ style = style_from_dict(
 
 
 class NewsApi():
-    def get_news_channel(self):
-        pass
 
+    def get_api_key(self):
+        return os.getenv("NEWS_API_KEY")
 
-questions = [
-    {
-        'type': 'list',
-        'message': 'Select news source',
-        'name': 'source',
-        'choices': [
-                Separator('= News Channels ='),
-                {
-                    'name': 'cnn'
-                },
+    def get_news_channel(self, api_key):
+        if not api_key:
+            raise ValueError("Your APi key is missing")
+
+        questions = [
             {
-                    'name': 'bbc-news'
+                'type': 'list',
+                'message': 'Select news source',
+                'name': 'source',
+                'choices': [
+                        Separator('= News Channels ='),
+                        {
+                            'name': 'cnn'
+                        },
+                    {
+                            'name': 'bbc-news'
                     },
-            {
-                    'name': 'abc-news'
+                    {
+                            'name': 'abc-news'
                     },
 
-            {
-                    'name': 'cnbc'
+                    {
+                            'name': 'cnbc'
 
                     },
+                ],
+                'validate': lambda answer: 'You must choose at least one news source.'
+            }
+        ]
+
+        answers = prompt(questions, style=style)
+        pprint(answers)
+        newsource = answers['source']
+        pprint(newsource)
+        return(newsource)
+
+    def fetch_news_headline(self):
+        news_source = self.get_news_channel('NEWS_API_KEY')
+        api_key = self.get_api_key()
+        url = "{}{}{}{}{},".format("https://newsapi.org/v2/top-headlines?sources=",
+                                   news_source, "&apiKey=", api_key, "&pageSize=10")
+
+        headlines = requests.get(url)
+        print(headlines)
+        if(headlines.ok):
+
+            jData = json.loads(headlines.content)
+            data = jData['articles']
+
+        return data
+
+    def display_headline(self):
+
+        article_content = self.fetch_news_headline()
+        count = 1
+        print("The response contains {0} properties".format(
+            len(article_content)))
+        print("\n")
+        for key in article_content:
+            print(count)
+            print("Title : ", key['title'])
+            print("Description : ", key['description'])
+            print("Url : ", key['url'])
+            count += 1
 
 
+if __name__ == "__main__":
+    news_api = NewsApi()
 
-
-        ],
-        'validate': lambda answer: 'You must choose at least one news source.'
-
-    }
-]
-
-
-answers = prompt(questions, style=style)
-pprint(answers)
-newsource = answers['source']
-pprint(newsource)
-
-
-url = 'https://newsapi.org/v2/top-headlines?sources='+newsource + \
-    '&apiKey=a4d893b3113a4d54bd9ce9bb3d5b96c9&pageSize=10'
-
-
-myResponse = requests.get(url)
-
-if(myResponse.ok):
-
-    jData = json.loads(myResponse.content)
-    data = jData['articles']
-
-    count = 1
-    print("The response contains {0} properties".format(len(jData)))
-    print("\n")
-    for key in data:
-        print(count)
-        print("Title : ", key['title'])
-        print("Description : ", key['description'])
-        print("Url : ", key['url'])
-        count += 1
-else:
-
-    myResponse.raise_for_status()
+    news_api.display_headline()
