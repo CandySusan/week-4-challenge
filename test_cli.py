@@ -6,7 +6,7 @@ class TestNewsApi(unittest.TestCase):
     def setUp(self):
         self.news_api = NewsApi()
         self.api_key = None
-    
+
     def test_api_key_is_available(self):
         with(self.news_api.get_api_key()):
             self.assertRaises(ValueError)
